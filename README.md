@@ -1,2 +1,2 @@
 # helsinki-fullstack-course
-The parctice of https://fullstackopen.com/
+The practice of https://fullstackopen.com/
