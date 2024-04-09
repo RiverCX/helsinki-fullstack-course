@@ -1,4 +1,7 @@
 const Numbers = ({ shownPersons, deleteNumber }) => {
+  if (!shownPersons) {
+    return null;
+  }
   return (
     <>
       {shownPersons.map((person) => (

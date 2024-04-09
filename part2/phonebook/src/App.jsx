@@ -4,16 +4,23 @@ import numberService from "./services/numbers";
 import Filter from "./components/Filter";
 import PersonForm from "./components/PersonForm";
 import Numbers from "./components/Numbers";
+import Notification from "./components/Notification";
 
 const App = () => {
   const [allPersons, setAllPersons] = useState([]);
   const [filterStr, setFilterStr] = useState("");
   const [newName, setNewName] = useState("");
   const [newNumber, setNewNumber] = useState("");
+  const [messageInfo, setMessageInfo] = useState(null);
 
   useEffect(() => {
     numberService.getNumbers().then((data) => setAllPersons(data));
   }, []);
+
+  const showMessage = (message, isError) => {
+    setMessageInfo({ message, isError });
+    setTimeout(() => setMessageInfo(null), 5000);
+  };
 
   const addNumber = (event) => {
     event.preventDefault();
@@ -36,12 +43,14 @@ const App = () => {
         setAllPersons(
           allPersons.map((person) => (person.id !== data.id ? person : data))
         );
+        showMessage(`Updated ${data.name}`, false);
         setNewName("");
         setNewNumber("");
       });
     } else {
       numberService.addNumber(newNumberObj).then((data) => {
         setAllPersons(allPersons.concat(data));
+        showMessage(`Added ${data.name}`, false);
         setNewName("");
         setNewNumber("");
       });
@@ -50,9 +59,18 @@ const App = () => {
 
   const deleteNumber = (person) => {
     if (window.confirm(`delete ${person.name} ?`)) {
-      numberService.deleteNumber(person.id).then((data) => {
-        setAllPersons(allPersons.filter((person) => person.id !== data.id));
-      });
+      numberService
+        .deleteNumber(person.id)
+        .then((data) => {
+          setAllPersons(allPersons.filter((person) => person.id !== data.id));
+          showMessage(`Deleted ${data.name}`, false);
+        })
+        .catch(() =>
+          showMessage(
+            `Information of ${person.name} has already been removed from the server`,
+            true
+          )
+        );
     }
   };
 
@@ -63,6 +81,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification messageInfo={messageInfo} />
       <Filter filterStr={filterStr} setFilterStr={setFilterStr} />
       <h2>add a new</h2>
       <PersonForm
