@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useEffect } from "react";
-import axios from "axios";
+import numberService from "./services/numbers";
 import Filter from "./components/Filter";
 import PersonForm from "./components/PersonForm";
 import Numbers from "./components/Numbers";
@@ -12,27 +12,48 @@ const App = () => {
   const [newNumber, setNewNumber] = useState("");
 
   useEffect(() => {
-    axios.get("http://localhost:3001/persons").then((res) => {
-      console;
-      setAllPersons(res.data);
-    });
+    numberService.getNumbers().then((data) => setAllPersons(data));
   }, []);
 
-  const addName = (event) => {
+  const addNumber = (event) => {
     event.preventDefault();
-    if (allPersons.find((person) => person.name === newName)) {
-      window.alert(`${newName} is already added to phonebook`);
+    const existNumber = allPersons.find((person) => person.name === newName);
+    if (
+      existNumber &&
+      !window.confirm(
+        `${newName} is already added to phonebook, replace the old number with a new one?`
+      )
+    ) {
       return;
     }
-    setAllPersons(
-      allPersons.concat({
-        name: newName,
-        number: newNumber,
-        id: allPersons.length + 1,
-      })
-    );
-    setNewName("");
-    setNewNumber("");
+    const newNumberObj = {
+      name: newName,
+      number: newNumber,
+    };
+
+    if (existNumber) {
+      numberService.updateNumber(existNumber.id, newNumberObj).then((data) => {
+        setAllPersons(
+          allPersons.map((person) => (person.id !== data.id ? person : data))
+        );
+        setNewName("");
+        setNewNumber("");
+      });
+    } else {
+      numberService.addNumber(newNumberObj).then((data) => {
+        setAllPersons(allPersons.concat(data));
+        setNewName("");
+        setNewNumber("");
+      });
+    }
+  };
+
+  const deleteNumber = (person) => {
+    if (window.confirm(`delete ${person.name} ?`)) {
+      numberService.deleteNumber(person.id).then((data) => {
+        setAllPersons(allPersons.filter((person) => person.id !== data.id));
+      });
+    }
   };
 
   const shownPersons = filterStr
@@ -45,14 +66,14 @@ const App = () => {
       <Filter filterStr={filterStr} setFilterStr={setFilterStr} />
       <h2>add a new</h2>
       <PersonForm
-        addName={addName}
+        addNumber={addNumber}
         newName={newName}
         newNumber={newNumber}
         setNewName={setNewName}
         setNewNumber={setNewNumber}
       />
       <h2>Numbers</h2>
-      <Numbers shownPersons={shownPersons} />
+      <Numbers shownPersons={shownPersons} deleteNumber={deleteNumber} />
     </div>
   );
 };
