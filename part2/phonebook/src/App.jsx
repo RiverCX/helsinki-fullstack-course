@@ -61,9 +61,9 @@ const App = () => {
     if (window.confirm(`delete ${person.name} ?`)) {
       numberService
         .deleteNumber(person.id)
-        .then((data) => {
-          setAllPersons(allPersons.filter((person) => person.id !== data.id));
-          showMessage(`Deleted ${data.name}`, false);
+        .then(() => {
+          setAllPersons(allPersons.filter((p) => p.id !== person.id));
+          showMessage(`Deleted ${person.name}`, false);
         })
         .catch(() =>
           showMessage(
